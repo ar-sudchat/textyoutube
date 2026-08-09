@@ -79,6 +79,7 @@
 
             'err.invalid_url': 'That URL is not valid, or no video ID could be found.',
             'err.no_transcript': 'This video’s text could not be retrieved. Check that you have permission to watch it and that it is not restricted.',
+            'err.youtube_blocked': 'YouTube refused this request from the server — its IP is likely rate-limited or flagged as automated traffic. Adding session cookies in settings usually fixes it.',
             'err.stt_api_key_required': 'This video has no subtitles, so a Gemini API Key is required to transcribe its audio (speech-to-text).',
             'err.stt_failed': 'Audio transcription failed.',
             'err.missing_api_key': 'No Gemini API Key found. Add one in settings or set the GEMINI_API_KEY environment variable.',
@@ -152,6 +153,7 @@
 
             'err.invalid_url': 'URL รูปแบบไม่ถูกต้อง หรือไม่พบ Video ID',
             'err.no_transcript': 'ไม่สามารถดึงข้อความจากวิดีโอนี้ได้ (กรุณาตรวจสอบว่ามีสิทธิ์รับชม หรือวิดีโอถูกจำกัดสิทธิ์หรือไม่)',
+            'err.youtube_blocked': 'YouTube ปฏิเสธคำขอจากเซิร์ฟเวอร์นี้ — น่าจะโดนจำกัดอัตราหรือถูกมองว่าเป็นบอท ลองใส่ Session Cookies ในหน้าตั้งค่ามักแก้ได้',
             'err.stt_api_key_required': 'วิดีโอนี้ไม่มีซับไตเติ้ลในตัว และจำเป็นต้องใช้ Gemini API Key เพื่อแปลงไฟล์เสียงเป็นข้อความ (Speech-to-Text)',
             'err.stt_failed': 'การถอดข้อความจากเสียงล้มเหลว',
             'err.missing_api_key': 'ไม่พบ Gemini API Key กรุณาระบุ API Key ในหน้าตั้งค่า หรือตั้งตัวแปร GEMINI_API_KEY',
@@ -225,6 +227,7 @@
 
             'err.invalid_url': '该链接无效，或找不到视频 ID。',
             'err.no_transcript': '无法获取该视频的文字内容。请确认你有观看权限，且视频未被限制。',
+            'err.youtube_blocked': 'YouTube 拒绝了来自服务器的此次请求 — 其 IP 可能被限流或被判定为自动化流量。在设置中添加 Session Cookies 通常可以解决。',
             'err.stt_api_key_required': '该视频没有字幕，需要 Gemini API Key 才能将音频转写为文字（语音转文字）。',
             'err.stt_failed': '音频转写失败。',
             'err.missing_api_key': '未找到 Gemini API Key。请在设置中填写，或设置 GEMINI_API_KEY 环境变量。',
@@ -298,6 +301,7 @@
 
             'err.invalid_url': 'URL が正しくないか、動画 ID が見つかりません。',
             'err.no_transcript': 'この動画のテキストを取得できませんでした。視聴権限があるか、制限がかかっていないかご確認ください。',
+            'err.youtube_blocked': 'YouTube がサーバーからのこのリクエストを拒否しました — IP がレート制限されているか、自動化トラフィックと判定された可能性があります。設定でセッション Cookie を追加すると解決することが多いです。',
             'err.stt_api_key_required': 'この動画には字幕がないため、音声を文字起こしするには Gemini API キーが必要です。',
             'err.stt_failed': '音声の文字起こしに失敗しました。',
             'err.missing_api_key': 'Gemini API キーが見つかりません。設定画面で入力するか、環境変数 GEMINI_API_KEY を設定してください。',

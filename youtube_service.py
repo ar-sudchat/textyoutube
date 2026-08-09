@@ -40,6 +40,34 @@ def extract_video_id(url_or_id: str) -> Optional[str]:
             
     return None
 
+# Phrases YouTube returns when it refuses a request on network/bot grounds rather
+# than because the video genuinely has no captions. Datacenter and VPS IPs hit
+# these constantly while the same code works from a residential connection.
+_BLOCKING_SIGNALS = (
+    "not a bot",
+    "requestblocked",
+    "ipblocked",
+    "blocking requests",
+    "sign in to confirm",
+    "too many requests",
+    "http error 429",
+    "youtubedataunparsable",
+    "failed to extract",
+    "player response",
+    "age-restricted",
+    "age restricted",
+    "login required",
+    "private video",
+    "members-only",
+)
+
+
+def _looks_like_blocking(message: str) -> bool:
+    """True when a failure reads like YouTube refusing us, not a missing caption track."""
+    lowered = (message or "").lower()
+    return any(signal in lowered for signal in _BLOCKING_SIGNALS)
+
+
 def format_timestamp(seconds: float) -> str:
     """Format seconds into HH:MM:SS or MM:SS."""
     seconds = int(seconds)
@@ -87,36 +115,66 @@ class YouTubeExtractor:
             except Exception as e:
                 logger.error(f"Error creating temp cookie file: {e}")
 
-        try:
-            # --- Strategy 1: youtube-transcript-api ---
-            logger.info(f"Attempting Strategy 1 (youtube-transcript-api) for video {video_id}")
-            result = self._fetch_via_official_api(video_id, cookie_file_path, preferred_languages)
-            if result.get("success"):
-                result["method"] = "subtitles_official_api"
-                result["video_id"] = video_id
-                return result
-                
-            # --- Strategy 2: yt-dlp Subtitle Extraction ---
-            logger.info(f"Attempting Strategy 2 (yt-dlp subtitles) for video {video_id}")
-            result = self._fetch_via_ytdlp_subtitles(video_id, cookie_file_path, preferred_languages)
-            if result.get("success"):
-                result["method"] = "subtitles_ytdlp"
-                result["video_id"] = video_id
-                return result
+        # Each strategy's failure is recorded so a total failure can explain itself.
+        # Without this the caller only ever sees a generic "no transcript" message.
+        attempts: List[Dict[str, Any]] = []
 
-            # --- Strategy 3: Audio Download + Gemini Audio STT ---
-            logger.info(f"Attempting Strategy 3 (Audio Extraction + AI STT) for video {video_id}")
-            result = self._transcribe_via_audio_ai(video_id, cookie_file_path)
-            if result.get("success"):
-                result["method"] = "ai_audio_transcription"
-                result["video_id"] = video_id
-                return result
-                
+        strategies = (
+            ("subtitles_official_api", "youtube-transcript-api",
+             lambda: self._fetch_via_official_api(video_id, cookie_file_path, preferred_languages)),
+            ("subtitles_ytdlp", "yt-dlp subtitles",
+             lambda: self._fetch_via_ytdlp_subtitles(video_id, cookie_file_path, preferred_languages)),
+            ("ai_audio_transcription", "audio extraction + AI STT",
+             lambda: self._transcribe_via_audio_ai(video_id, cookie_file_path)),
+        )
+
+        try:
+            for index, (method, label, run) in enumerate(strategies, start=1):
+                logger.info(f"Attempting Strategy {index} ({label}) for video {video_id}")
+                result = run()
+                if result.get("success"):
+                    result["method"] = method
+                    result["video_id"] = video_id
+                    return result
+
+                reason = str(result.get("error") or "unknown error")
+                logger.warning(f"Strategy {index} ({label}) failed for {video_id}: {reason}")
+                attempts.append({
+                    "strategy": method,
+                    "error_code": result.get("error_code"),
+                    "error": reason,
+                })
+
+            # Surface the most actionable failure instead of flattening everything
+            # into one generic message (e.g. "you need an API key for this video").
+            for attempt in attempts:
+                if attempt.get("error_code") == "stt_api_key_required":
+                    return {
+                        "success": False,
+                        "video_id": video_id,
+                        "error_code": "stt_api_key_required",
+                        "error": attempt["error"],
+                        "attempts": attempts,
+                    }
+
+            blocked = next(
+                (a for a in attempts if _looks_like_blocking(a["error"])), None
+            )
+            if blocked:
+                return {
+                    "success": False,
+                    "video_id": video_id,
+                    "error_code": "youtube_blocked",
+                    "error": blocked["error"],
+                    "attempts": attempts,
+                }
+
             return {
                 "success": False,
                 "video_id": video_id,
                 "error_code": "no_transcript",
-                "error": "This video's text could not be retrieved. Check that you have permission to watch it and that it is not restricted."
+                "error": "This video's text could not be retrieved. Check that you have permission to watch it and that it is not restricted.",
+                "attempts": attempts,
             }
 
         finally:
