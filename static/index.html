@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="app.title">GetText AI — YouTube Transcript &amp; AI Summarizer</title>
+    <meta name="theme-color" content="#f5f7fb">
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+    <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Marked.js for Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for Code Highlighting (light theme) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css?v=2">
+</head>
+<body>
+    <div class="background-globes">
+        <div class="globe globe-1"></div>
+        <div class="globe globe-2"></div>
+        <div class="globe globe-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fa-brands fa-youtube"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>GetText <span>AI</span></h1>
+                    <p data-i18n="app.tagline">Smart YouTube transcript extraction &amp; AI article summaries (Public &amp; Private)</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="lang-switcher">
+                    <i class="fa-solid fa-globe lang-icon"></i>
+                    <select id="ui-language" class="lang-select" aria-label="Language">
+                        <option value="en">English</option>
+                        <option value="th">ไทย</option>
+                        <option value="zh">简体中文</option>
+                        <option value="ja">日本語</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down lang-caret"></i>
+                </div>
+                <button id="btn-toggle-settings" class="btn-icon" data-i18n-title="settings.open" title="API Key / Cookies settings">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Settings Modal / Panel -->
+        <div id="settings-panel" class="settings-panel hidden">
+            <div class="settings-content glass-card">
+                <div class="settings-header">
+                    <h3>
+                        <i class="fa-solid fa-sliders"></i>
+                        <span data-i18n="settings.title">API &amp; Authentication settings</span>
+                    </h3>
+                    <button id="btn-close-settings" class="btn-close">&times;</button>
+                </div>
+                <div class="settings-body">
+                    <div class="form-group">
+                        <label for="input-gemini-key">
+                            <i class="fa-solid fa-key"></i>
+                            <span data-i18n="settings.apiKey.label">Gemini API Key (for AI summaries / videos without subtitles)</span>
+                        </label>
+                        <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="form-input">
+                        <small class="help-text" data-i18n="settings.apiKey.help">Powered by Gemini 2.0 Flash — sharp summaries and direct audio transcription.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-cookies">
+                            <i class="fa-solid fa-cookie-bite"></i>
+                            <span data-i18n="settings.cookies.label">Session Cookies (`cookies.txt` for private videos)</span>
+                        </label>
+                        <textarea id="input-cookies" data-i18n-placeholder="settings.cookies.placeholder" placeholder="Paste your Netscape cookies.txt content here to access private videos..." class="form-textarea" rows="4"></textarea>
+                        <div class="cookie-upload-row">
+                            <label class="btn-file-upload">
+                                <i class="fa-solid fa-file-import"></i>
+                                <span data-i18n="settings.cookies.upload">Upload cookies.txt</span>
+                                <input type="file" id="file-cookie-upload" accept=".txt">
+                            </label>
+                            <span id="cookie-status" class="status-badge" data-i18n="settings.cookies.notSet">No cookie set</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-footer">
+                    <button id="btn-save-settings" class="btn btn-primary">
+                        <i class="fa-solid fa-check"></i>
+                        <span data-i18n="settings.save">Save settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Form Card -->
+        <main class="main-content">
+            <div class="input-card glass-card">
+                <div class="url-input-group">
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-link input-icon"></i>
+                        <input type="text" id="youtube-url" data-i18n-placeholder="url.placeholder" placeholder="Paste a YouTube URL here (e.g. https://www.youtube.com/watch?v=...)" class="url-input" autofocus>
+                        <button id="btn-clear-url" class="btn-input-action hidden" data-i18n-title="url.clear" title="Clear link"><i class="fa-solid fa-xmark"></i></button>
+                        <button id="btn-paste-url" class="btn-input-action" data-i18n-title="url.paste" title="Paste link">
+                            <i class="fa-solid fa-paste"></i>
+                            <span data-i18n="url.pasteShort">Paste</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Control Options -->
+                <div class="options-grid">
+                    <div class="option-box">
+                        <label>
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span data-i18n="options.videoType">Video type</span>
+                        </label>
+                        <div class="segmented">
+                            <label class="segment" data-i18n-title="options.public.hint" title="Public or unlisted videos">
+                                <input type="radio" name="video-type" value="public" checked>
+                                <span><i class="fa-solid fa-globe"></i><span data-i18n="options.public">Public</span></span>
+                            </label>
+                            <label class="segment" data-i18n-title="options.private.hint" title="Private videos — requires cookies">
+                                <input type="radio" name="video-type" value="private">
+                                <span><i class="fa-solid fa-lock"></i><span data-i18n="options.private">Private</span></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="option-box">
+                        <label>
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span data-i18n="options.summaryType">Summary format</span>
+                        </label>
+                        <select id="summary-type" class="form-select">
+                            <option value="article" data-i18n="summaryType.article">📰 Full Article</option>
+                            <option value="executive_summary" data-i18n="summaryType.executive">⚡ Executive Summary</option>
+                            <option value="key_takeaways" data-i18n="summaryType.takeaways">🎯 Key Takeaways</option>
+                            <option value="timestamps" data-i18n="summaryType.timestamps">⏱️ Timestamp Outline</option>
+                            <option value="full_report" data-i18n="summaryType.fullReport">📊 Comprehensive Full Report</option>
+                        </select>
+                    </div>
+
+                    <div class="option-box">
+                        <label>
+                            <i class="fa-solid fa-language"></i>
+                            <span data-i18n="options.outputLanguage">Output language</span>
+                        </label>
+                        <select id="output-language" class="form-select">
+                            <option value="en">🇺🇸 English</option>
+                            <option value="th">🇹🇭 ไทย</option>
+                            <option value="zh">🇨🇳 简体中文</option>
+                            <option value="ja">🇯🇵 日本語</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Custom Prompt -->
+                <div class="custom-prompt-container">
+                    <button id="btn-toggle-custom-prompt" class="btn-text">
+                        <i class="fa-solid fa-chevron-down"></i>
+                        <span data-i18n="customPrompt.toggle">Add special instructions for the AI (optional)</span>
+                    </button>
+                    <div id="custom-prompt-wrapper" class="custom-prompt-wrapper hidden">
+                        <textarea id="custom-instructions" data-i18n-placeholder="customPrompt.placeholder" placeholder="Tell the AI what to focus on, e.g. 'highlight the coding techniques', 'analyse pros and cons'..." class="form-textarea" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button id="btn-extract-only" class="btn btn-gradient">
+                        <i class="fa-solid fa-file-lines"></i>
+                        <span data-i18n="action.extractOnly">Get transcript only</span>
+                    </button>
+                    <button id="btn-extract-summarize" class="btn btn-secondary">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span data-i18n="action.extractSummarize">Transcript + AI summary</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading & Status Section -->
+            <div id="loading-container" class="loading-container hidden">
+                <div class="glass-card status-card">
+                    <div class="spinner"></div>
+                    <div class="status-info">
+                        <h4 id="status-title" data-i18n="status.extracting.title">Fetching transcript…</h4>
+                        <p id="status-detail" data-i18n="status.extracting.detail">Looking for and extracting the text from this video</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="error-container" class="error-container hidden">
+                <div class="error-card">
+                    <i class="fa-solid fa-circle-exclamation error-icon"></i>
+                    <div class="error-info">
+                        <h4 data-i18n="error.title">Something went wrong</h4>
+                        <p id="error-message" data-i18n="error.generic">The request could not be completed.</p>
+                    </div>
+                    <button id="btn-close-error" class="btn-close-error">&times;</button>
+                </div>
+            </div>
+
+            <!-- Output Section -->
+            <div id="output-container" class="output-container hidden">
+                <div class="output-header glass-card">
+                    <div class="output-tabs">
+                        <button id="tab-summary" class="tab-btn active">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span data-i18n="tab.summary">AI Summary</span>
+                        </button>
+                        <button id="tab-transcript" class="tab-btn">
+                            <i class="fa-solid fa-align-left"></i>
+                            <span data-i18n="tab.transcript">Transcript</span>
+                        </button>
+                    </div>
+                    <div class="output-actions">
+                        <button id="btn-copy-active" class="btn btn-sm btn-outline">
+                            <i class="fa-regular fa-copy"></i>
+                            <span data-i18n="output.copy">Copy</span>
+                        </button>
+                        <button id="btn-download-active" class="btn btn-sm btn-outline">
+                            <i class="fa-solid fa-download"></i>
+                            <span data-i18n="output.download">Download</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab 1: AI Summary Content -->
+                <div id="panel-summary" class="tab-panel active">
+                    <div class="glass-card result-card">
+                        <div id="summary-render" class="markdown-body"></div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Transcript Content -->
+                <div id="panel-transcript" class="tab-panel hidden">
+                    <div class="glass-card result-card">
+                        <div class="transcript-toolbar">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="transcript-search" data-i18n-placeholder="transcript.search" placeholder="Search inside the transcript...">
+                            </div>
+                            <div class="view-toggle">
+                                <button id="btn-view-clean" class="btn-chip active" data-i18n="transcript.viewClean">Plain text</button>
+                                <button id="btn-view-timestamped" class="btn-chip" data-i18n="transcript.viewTimestamped">With timestamps</button>
+                            </div>
+                        </div>
+                        <div id="transcript-render" class="transcript-content"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <p data-i18n="footer">© 2026 GetText AI • YouTube transcript extraction &amp; article summaries powered by Gemini 2.0 Flash</p>
+        </footer>
+    </div>
+
+    <script src="/static/i18n.js?v=2"></script>
+    <script src="/static/app.js?v=2"></script>
+</body>
+</html>
