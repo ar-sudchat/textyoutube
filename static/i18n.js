@@ -18,7 +18,7 @@
             'app.tagline': 'Smart YouTube transcript extraction & AI article summaries (Public & Private)',
             'app.quit': "Quit GetText AI",
             'app.quitConfirm': "Stop the GetText AI server?\n\nThis page will stop working until you launch the app again.",
-            'app.quitDone': "GetText AI has stopped. You can close this tab.",
+            'app.quitDone': "GetText AI has stopped.\n\nTo use it again, press ⌘ Space and type “GetText”, or open it from Applications.",
 
             'settings.open': 'API Key / Cookies settings',
             'settings.title': 'API & Authentication settings',
@@ -96,7 +96,7 @@
             'app.tagline': 'ระบบดึง Transcript & สรุปบทความอัจฉริยะจาก YouTube (Public & Private)',
             'app.quit': "ปิด GetText AI",
             'app.quitConfirm': "ต้องการหยุดเซิร์ฟเวอร์ GetText AI ไหม?\n\nหน้านี้จะใช้งานไม่ได้จนกว่าจะเปิดแอปใหม่",
-            'app.quitDone': "GetText AI หยุดทำงานแล้ว ปิดแท็บนี้ได้เลย",
+            'app.quitDone': "GetText AI หยุดทำงานแล้ว\n\nถ้าจะใช้อีก กด ⌘ Space แล้วพิมพ์ “GetText” หรือเปิดจากโฟลเดอร์ Applications",
 
             'settings.open': 'ตั้งค่า API Key / Cookies',
             'settings.title': 'ตั้งค่าการเชื่อมต่อ API & Authentication',
@@ -174,7 +174,7 @@
             'app.tagline': '智能提取 YouTube 字幕并生成 AI 文章摘要（公开与私享视频）',
             'app.quit': "退出 GetText AI",
             'app.quitConfirm': "要停止 GetText AI 服务器吗？\n\n在重新启动应用之前，此页面将无法使用。",
-            'app.quitDone': "GetText AI 已停止，可以关闭此标签页。",
+            'app.quitDone': "GetText AI 已停止。\n\n要再次使用，请按 ⌘ Space 并输入「GetText」，或从「应用程序」中打开。",
 
             'settings.open': 'API Key / Cookies 设置',
             'settings.title': 'API 与身份验证设置',
@@ -252,7 +252,7 @@
             'app.tagline': 'YouTube の文字起こし抽出と AI 記事要約（公開・限定公開・非公開に対応）',
             'app.quit': "GetText AI を終了",
             'app.quitConfirm': "GetText AI のサーバーを停止しますか？\n\nアプリを再度起動するまで、このページは使えなくなります。",
-            'app.quitDone': "GetText AI を停止しました。このタブを閉じてかまいません。",
+            'app.quitDone': "GetText AI を停止しました。\n\n再度使うには ⌘ Space を押して「GetText」と入力するか、アプリケーションフォルダから開いてください。",
 
             'settings.open': 'API キー / Cookie の設定',
             'settings.title': 'API と認証の設定',

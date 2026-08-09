@@ -25,6 +25,27 @@ refusing the request.
 ./run.sh          # creates venv, installs deps, serves on http://localhost:8000
 ```
 
+## Running as a macOS app
+
+```bash
+./build-macapp.sh                 # -> dist/GetText AI.app
+./build-macapp.sh /Applications   # or install straight away
+```
+
+The bundle lives in the menu bar: click the icon to open the page, restart the
+server, or quit. It creates the venv on first launch, always serves on
+`http://127.0.0.1:8765` (so the URL can be bookmarked), and stops the server when
+you quit. It has no Dock icon by design — the page is the interface.
+
+Where `swiftc` is unavailable the build falls back to a shell launcher that opens
+the browser and is quit from a button in the page.
+
+Running locally also sidesteps the blocking described under
+[Why a deployed instance needs cookies](#why-a-deployed-instance-needs-cookies):
+YouTube does not block residential IPs, so no cookies are needed at all. Private
+videos are covered by `YOUTUBE_COOKIES_FROM_BROWSER`, which the app sets to
+`chrome` so yt-dlp reads the local browser profile directly.
+
 ## Running with Docker
 
 ```bash

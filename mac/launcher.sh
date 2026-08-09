@@ -75,9 +75,15 @@ fi
 PORT=$("$PY" - "$PREFERRED_PORT" <<'PY'
 import socket, sys
 
+# SO_REUSEADDR matters here: a server that just exited leaves the port in
+# TIME_WAIT, where a plain bind() fails even though uvicorn — which sets this
+# same option — would bind it happily. Without it the probe rejects the
+# preferred port after every restart and the URL keeps drifting upward,
+# so no bookmark to the app ever stays valid.
 preferred = int(sys.argv[1])
 for candidate in list(range(preferred, preferred + 40)) + [0]:
     sock = socket.socket()
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
         sock.bind(("127.0.0.1", candidate))
         print(sock.getsockname()[1])

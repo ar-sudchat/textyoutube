@@ -1302,3 +1302,8 @@ body {
     font-size: var(--text-lg);
     color: var(--text-muted);
 }
+
+.farewell {
+    white-space: pre-line;
+    line-height: var(--leading-relaxed);
+}

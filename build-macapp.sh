@@ -38,9 +38,30 @@ echo "  icon    : ok"
 # --- Launcher -------------------------------------------------------------
 # Escape for sed: the project path may contain characters sed treats specially.
 ESCAPED_DIR=$(printf '%s\n' "$PROJECT_DIR" | sed 's/[&|\\]/\\&/g')
-sed "s|__PROJECT_DIR__|$ESCAPED_DIR|" "$PROJECT_DIR/mac/launcher.sh" \
-    > "$APP/Contents/MacOS/GetTextAI"
+PORT=8765
+
+# Preferred: a compiled menu bar app. It is a real NSApplication, so it owns a
+# permanent status-bar item to start and stop from, and macOS never leaves the
+# Dock bouncing for a launch signal a script cannot send.
+if command -v swiftc >/dev/null 2>&1; then
+    SWIFT_SRC="$(mktemp -d)/MenuBarApp.swift"
+    sed -e "s|__PROJECT_DIR__|$ESCAPED_DIR|" -e "s|__PORT__|$PORT|" \
+        "$PROJECT_DIR/mac/MenuBarApp.swift" > "$SWIFT_SRC"
+    if swiftc -O -parse-as-library -o "$APP/Contents/MacOS/GetTextAI" "$SWIFT_SRC" 2>/dev/null; then
+        MODE="menu bar app (Swift)"
+    fi
+    rm -rf "$(dirname "$SWIFT_SRC")"
+fi
+
+# Fallback for machines without the Swift toolchain: the shell launcher opens
+# the browser and holds the server, with quitting done from the page.
+if [ ! -x "$APP/Contents/MacOS/GetTextAI" ]; then
+    sed "s|__PROJECT_DIR__|$ESCAPED_DIR|" "$PROJECT_DIR/mac/launcher.sh" \
+        > "$APP/Contents/MacOS/GetTextAI"
+    MODE="shell launcher (swiftc not found)"
+fi
 chmod +x "$APP/Contents/MacOS/GetTextAI"
+echo "  mode    : $MODE"
 
 # --- Info.plist -----------------------------------------------------------
 cat > "$APP/Contents/Info.plist" <<PLIST
