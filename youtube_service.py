@@ -146,17 +146,12 @@ class YouTubeExtractor:
                 })
 
             # Surface the most actionable failure instead of flattening everything
-            # into one generic message (e.g. "you need an API key for this video").
-            for attempt in attempts:
-                if attempt.get("error_code") == "stt_api_key_required":
-                    return {
-                        "success": False,
-                        "video_id": video_id,
-                        "error_code": "stt_api_key_required",
-                        "error": attempt["error"],
-                        "attempts": attempts,
-                    }
-
+            # into one generic message.
+            #
+            # Blocking is checked FIRST and deliberately outranks the missing-API-key
+            # case: when YouTube refuses us, strategy 3 downloads its audio with the
+            # very same yt-dlp that just got refused, so telling the user to add a
+            # Gemini key would send them after a fix that cannot work.
             blocked = next(
                 (a for a in attempts if _looks_like_blocking(a["error"])), None
             )
@@ -168,6 +163,16 @@ class YouTubeExtractor:
                     "error": blocked["error"],
                     "attempts": attempts,
                 }
+
+            for attempt in attempts:
+                if attempt.get("error_code") == "stt_api_key_required":
+                    return {
+                        "success": False,
+                        "video_id": video_id,
+                        "error_code": "stt_api_key_required",
+                        "error": attempt["error"],
+                        "attempts": attempts,
+                    }
 
             return {
                 "success": False,
@@ -196,21 +201,32 @@ class YouTubeExtractor:
             if cookie_file_path:
                 kwargs['cookies'] = cookie_file_path
                 
-            # Attempt to fetch directly with preferred languages
+            # Attempt to fetch directly with preferred languages. Both failures are
+            # kept: swallowing them reports "no subtitle track" for videos that are
+            # really being refused, which hides an IP block behind a wrong diagnosis.
             fetched = None
+            fetch_err = None
+            list_err = None
             try:
                 fetched = api.fetch(video_id, languages=languages, **kwargs)
-            except Exception:
+            except Exception as e:
+                fetch_err = e
+                logger.warning(f"Fetch transcript failed for {video_id}: {e}")
                 try:
                     transcript_list = api.list(video_id, **kwargs)
                     for tr in transcript_list:
                         fetched = tr.fetch()
                         break
-                except Exception as list_err:
-                    logger.warning(f"List transcripts failed: {list_err}")
+                except Exception as e2:
+                    list_err = e2
+                    logger.warning(f"List transcripts failed for {video_id}: {e2}")
 
             if not fetched:
-                return {"success": False, "error": "No subtitle track found"}
+                detail = str(list_err or fetch_err or "").strip()
+                return {
+                    "success": False,
+                    "error": detail or "No subtitle track found"
+                }
 
             items = []
             full_text_lines = []

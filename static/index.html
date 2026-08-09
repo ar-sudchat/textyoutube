@@ -20,7 +20,7 @@
     <!-- Highlight.js for Code Highlighting (light theme) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <link rel="stylesheet" href="/static/style.css?v=3">
+    <link rel="stylesheet" href="/static/style.css?v=4">
 </head>
 <body>
     <div class="background-globes">
@@ -110,11 +110,13 @@
                     <div class="input-wrapper">
                         <i class="fa-solid fa-link input-icon"></i>
                         <input type="text" id="youtube-url" data-i18n-placeholder="url.placeholder" placeholder="Paste a YouTube URL here (e.g. https://www.youtube.com/watch?v=...)" class="url-input" autofocus>
-                        <button id="btn-clear-url" class="btn-input-action hidden" data-i18n-title="url.clear" title="Clear link"><i class="fa-solid fa-xmark"></i></button>
-                        <button id="btn-paste-url" class="btn-input-action" data-i18n-title="url.paste" title="Paste link">
-                            <i class="fa-solid fa-paste"></i>
-                            <span data-i18n="url.pasteShort">Paste</span>
-                        </button>
+                        <div class="input-actions">
+                            <button id="btn-clear-url" class="btn-input-action btn-input-icon hidden" data-i18n-title="url.clear" title="Clear link"><i class="fa-solid fa-xmark"></i></button>
+                            <button id="btn-paste-url" class="btn-input-action" data-i18n-title="url.paste" title="Paste link">
+                                <i class="fa-solid fa-paste"></i>
+                                <span data-i18n="url.pasteShort">Paste</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -268,7 +270,7 @@
         </footer>
     </div>
 
-    <script src="/static/i18n.js?v=3"></script>
-    <script src="/static/app.js?v=3"></script>
+    <script src="/static/i18n.js?v=4"></script>
+    <script src="/static/app.js?v=4"></script>
 </body>
 </html>
