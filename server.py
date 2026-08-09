@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-from youtube_service import YouTubeExtractor
+from youtube_service import YouTubeExtractor, cookies_configured, get_proxy
 from ai_summarizer import AISummarizer
 
 logging.basicConfig(level=logging.INFO)
@@ -71,7 +71,14 @@ async def summarize_transcript(req: SummarizeRequest):
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "gemini_key_set": bool(os.environ.get("GEMINI_API_KEY"))}
+    """Reports which server-side credentials are configured, so a deployment can be
+    checked without guessing why YouTube is refusing it."""
+    return {
+        "status": "ok",
+        "gemini_key_set": bool(os.environ.get("GEMINI_API_KEY")),
+        "youtube_cookies_set": cookies_configured(),
+        "youtube_proxy_set": bool(get_proxy()),
+    }
 
 # Mount static directory if exists
 static_dir = os.path.join(os.path.dirname(__file__), "static")

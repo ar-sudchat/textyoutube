@@ -33,6 +33,10 @@ def _build_http_client(cookie_file_path: Optional[str]) -> requests.Session:
     session = requests.Session()
     session.headers.update({"User-Agent": _BROWSER_UA})
 
+    proxy = get_proxy()
+    if proxy:
+        session.proxies.update({"http": proxy, "https": proxy})
+
     if cookie_file_path:
         try:
             jar = http.cookiejar.MozillaCookieJar(cookie_file_path)
@@ -100,6 +104,48 @@ def _looks_like_blocking(message: str) -> bool:
     return any(signal in lowered for signal in _BLOCKING_SIGNALS)
 
 
+def get_proxy() -> Optional[str]:
+    """Optional outbound proxy for every YouTube call (e.g. a residential proxy).
+
+    Set YOUTUBE_PROXY to something like http://user:pass@host:port. YouTube blocks
+    datacenter ranges wholesale, so routing through a residential exit is the other
+    way out when cookies alone are not enough.
+    """
+    return os.environ.get("YOUTUBE_PROXY") or None
+
+
+def resolve_server_cookies() -> Optional[str]:
+    """
+    Cookie text configured on the server, so the deployment stays "logged in"
+    without every visitor pasting their own jar.
+
+    YOUTUBE_COOKIES_FILE — path to a cookies.txt (use a Coolify persistent volume)
+    YOUTUBE_COOKIES      — the cookies.txt contents inline, for env-var-only hosts
+    """
+    path = os.environ.get("YOUTUBE_COOKIES_FILE")
+    if path and os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                content = fh.read()
+            if content.strip():
+                return content
+        except Exception as e:
+            logger.error(f"Could not read YOUTUBE_COOKIES_FILE at {path}: {e}")
+
+    inline = os.environ.get("YOUTUBE_COOKIES")
+    if inline and inline.strip():
+        # Env vars often arrive with escaped newlines; cookies.txt is tab/newline
+        # delimited and silently fails to parse without real line breaks.
+        return inline.replace("\\n", "\n")
+
+    return None
+
+
+def cookies_configured() -> bool:
+    """Whether the server itself holds a usable cookie jar."""
+    return resolve_server_cookies() is not None
+
+
 def format_timestamp(seconds: float) -> str:
     """Format seconds into HH:MM:SS or MM:SS."""
     seconds = int(seconds)
@@ -137,6 +183,13 @@ class YouTubeExtractor:
         if not preferred_languages:
             preferred_languages = ['th', 'en', 'auto']
             
+        # A jar sent with the request wins; otherwise fall back to the one the
+        # server is configured with, so the deployment works out of the box.
+        cookie_source = "request"
+        if not (cookies_content and cookies_content.strip()):
+            cookies_content = resolve_server_cookies()
+            cookie_source = "server" if cookies_content else "none"
+
         cookie_file_path = None
         if cookies_content and cookies_content.strip():
             try:
@@ -144,8 +197,11 @@ class YouTubeExtractor:
                 temp_cookie.write(cookies_content)
                 temp_cookie.close()
                 cookie_file_path = temp_cookie.name
+                logger.info(f"Using {cookie_source} cookies for {video_id}")
             except Exception as e:
                 logger.error(f"Error creating temp cookie file: {e}")
+        else:
+            logger.info(f"No cookies available for {video_id}")
 
         # Each strategy's failure is recorded so a total failure can explain itself.
         # Without this the caller only ever sees a generic "no transcript" message.
@@ -321,6 +377,9 @@ class YouTubeExtractor:
         }
         if cookie_file_path:
             ydl_opts['cookiefile'] = cookie_file_path
+        proxy = get_proxy()
+        if proxy:
+            ydl_opts['proxy'] = proxy
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -353,7 +412,11 @@ class YouTubeExtractor:
                 json_format = next((f for f in chosen_sub if f.get('ext') == 'json3'), None)
                 if json_format:
                     # Download json3 subtitle directly
-                    resp = requests.get(json_format['url'], timeout=10, verify=False)
+                    # Same session as strategy 1 so this leg carries the cookies,
+                    # browser UA and proxy too, instead of a bare anonymous GET.
+                    resp = _build_http_client(cookie_file_path).get(
+                        json_format['url'], timeout=15
+                    )
                     if resp.status_code == 200:
                         sub_json = resp.json()
                         items = []
@@ -416,6 +479,9 @@ class YouTubeExtractor:
             }
             if cookie_file_path:
                 ydl_opts['cookiefile'] = cookie_file_path
+            proxy = get_proxy()
+            if proxy:
+                ydl_opts['proxy'] = proxy
 
             try:
                 logger.info("Downloading audio for AI transcription...")
