@@ -1284,3 +1284,21 @@ body {
     line-height: var(--leading-relaxed);
     margin: 0;
 }
+
+.btn-icon-quit:hover {
+    background: #fef4f4;
+    border-color: var(--error);
+    color: var(--error);
+    transform: none;
+}
+
+.farewell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px;
+    text-align: center;
+    font-size: var(--text-lg);
+    color: var(--text-muted);
+}

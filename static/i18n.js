@@ -16,6 +16,9 @@
         en: {
             'app.title': 'GetText AI — YouTube Transcript & AI Summarizer',
             'app.tagline': 'Smart YouTube transcript extraction & AI article summaries (Public & Private)',
+            'app.quit': "Quit GetText AI",
+            'app.quitConfirm': "Stop the GetText AI server?\n\nThis page will stop working until you launch the app again.",
+            'app.quitDone': "GetText AI has stopped. You can close this tab.",
 
             'settings.open': 'API Key / Cookies settings',
             'settings.title': 'API & Authentication settings',
@@ -37,6 +40,7 @@
             'auth.checking': 'Checking…',
             'auth.server': 'Signed in · server cookies',
             'auth.user': 'Signed in · your cookies',
+            'auth.local': "Local app · no sign-in needed",
             'auth.none': 'Not signed in — add cookies',
             'options.summaryType': 'Summary format',
             'options.outputLanguage': 'Output language',
@@ -90,6 +94,9 @@
         th: {
             'app.title': 'GetText AI — ดึง Transcript & สรุปบทความจาก YouTube',
             'app.tagline': 'ระบบดึง Transcript & สรุปบทความอัจฉริยะจาก YouTube (Public & Private)',
+            'app.quit': "ปิด GetText AI",
+            'app.quitConfirm': "ต้องการหยุดเซิร์ฟเวอร์ GetText AI ไหม?\n\nหน้านี้จะใช้งานไม่ได้จนกว่าจะเปิดแอปใหม่",
+            'app.quitDone': "GetText AI หยุดทำงานแล้ว ปิดแท็บนี้ได้เลย",
 
             'settings.open': 'ตั้งค่า API Key / Cookies',
             'settings.title': 'ตั้งค่าการเชื่อมต่อ API & Authentication',
@@ -111,6 +118,7 @@
             'auth.checking': 'กำลังตรวจสอบ…',
             'auth.server': 'ล็อกอินแล้ว · Cookies ของเซิร์ฟเวอร์',
             'auth.user': 'ล็อกอินแล้ว · Cookies ของคุณ',
+            'auth.local': "แอปบนเครื่อง · ไม่ต้องล็อกอิน",
             'auth.none': 'ยังไม่ได้ล็อกอิน — กรุณาใส่ Cookies',
             'options.summaryType': 'รูปแบบบทความสรุป',
             'options.outputLanguage': 'ภาษาผลลัพธ์',
@@ -164,6 +172,9 @@
         zh: {
             'app.title': 'GetText AI — YouTube 字幕提取与 AI 摘要',
             'app.tagline': '智能提取 YouTube 字幕并生成 AI 文章摘要（公开与私享视频）',
+            'app.quit': "退出 GetText AI",
+            'app.quitConfirm': "要停止 GetText AI 服务器吗？\n\n在重新启动应用之前，此页面将无法使用。",
+            'app.quitDone': "GetText AI 已停止，可以关闭此标签页。",
 
             'settings.open': 'API Key / Cookies 设置',
             'settings.title': 'API 与身份验证设置',
@@ -185,6 +196,7 @@
             'auth.checking': '检查中…',
             'auth.server': '已登录 · 服务器 Cookies',
             'auth.user': '已登录 · 你的 Cookies',
+            'auth.local': "本地应用 · 无需登录",
             'auth.none': '未登录 — 请添加 Cookies',
             'options.summaryType': '摘要格式',
             'options.outputLanguage': '输出语言',
@@ -238,6 +250,9 @@
         ja: {
             'app.title': 'GetText AI — YouTube 文字起こし & AI 要約',
             'app.tagline': 'YouTube の文字起こし抽出と AI 記事要約（公開・限定公開・非公開に対応）',
+            'app.quit': "GetText AI を終了",
+            'app.quitConfirm': "GetText AI のサーバーを停止しますか？\n\nアプリを再度起動するまで、このページは使えなくなります。",
+            'app.quitDone': "GetText AI を停止しました。このタブを閉じてかまいません。",
 
             'settings.open': 'API キー / Cookie の設定',
             'settings.title': 'API と認証の設定',
@@ -259,6 +274,7 @@
             'auth.checking': '確認中…',
             'auth.server': 'ログイン済み · サーバーの Cookie',
             'auth.user': 'ログイン済み · あなたの Cookie',
+            'auth.local': "ローカルアプリ · ログイン不要",
             'auth.none': '未ログイン — Cookie を追加してください',
             'options.summaryType': '要約の形式',
             'options.outputLanguage': '出力言語',

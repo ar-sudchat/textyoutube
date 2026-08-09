@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCopyActive = document.getElementById('btn-copy-active');
     const btnDownloadActive = document.getElementById('btn-download-active');
 
+    const btnQuitApp = document.getElementById('btn-quit-app');
     const authStatus = document.getElementById('auth-status');
     const authStatusText = document.getElementById('auth-status-text');
 
@@ -89,13 +90,16 @@ document.addEventListener('DOMContentLoaded', () => {
      * deployed instance works at all, so this is surfaced up front rather than
      * left to be discovered through a failed extraction.
      */
-    const auth = { serverCookies: false, known: false };
+    const auth = { serverCookies: false, isDesktop: false, known: false };
 
     async function loadAuthStatus() {
         try {
             const resp = await fetch('/api/health');
             const data = await resp.json();
             auth.serverCookies = !!data.youtube_cookies_set;
+            // Only the desktop app can be shut down from here.
+            auth.isDesktop = !!data.can_shutdown;
+            btnQuitApp.classList.toggle('hidden', !auth.isDesktop);
         } catch (err) {
             console.error('Health check failed:', err);
             auth.serverCookies = false;
@@ -103,6 +107,17 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.known = true;
         renderAuthStatus();
     }
+
+    btnQuitApp.addEventListener('click', async () => {
+        if (!confirm(i18n.t('app.quitConfirm'))) return;
+        try {
+            await fetch('/api/shutdown', { method: 'POST' });
+        } catch (err) {
+            // The server drops the connection as it exits; that is the success case.
+        }
+        document.body.innerHTML =
+            `<div class="farewell">${escapeHtml(i18n.t('app.quitDone'))}</div>`;
+    });
 
     function renderAuthStatus() {
         const hasUserCookies = !!state.cookiesText.trim();
@@ -115,6 +130,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 tone = 'ok';
             } else if (auth.serverCookies) {
                 key = 'auth.server';
+                tone = 'ok';
+            } else if (auth.isDesktop) {
+                // Running on the user's own machine: YouTube does not block
+                // residential IPs, so missing cookies is not a problem to flag.
+                key = 'auth.local';
                 tone = 'ok';
             } else {
                 key = 'auth.none';

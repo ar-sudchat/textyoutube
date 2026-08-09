@@ -1,4 +1,7 @@
 import os
+import signal
+import threading
+import time
 import logging
 from typing import Optional, List
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
@@ -69,6 +72,25 @@ async def summarize_transcript(req: SummarizeRequest):
         
     return result
 
+def shutdown_allowed() -> bool:
+    """Only the desktop launcher sets this. A public deployment must never expose
+    a shutdown endpoint, so it stays off unless explicitly switched on."""
+    return os.environ.get("GETTEXT_ALLOW_SHUTDOWN") == "1"
+
+
+@app.post("/api/shutdown")
+async def shutdown():
+    if not shutdown_allowed():
+        return JSONResponse(status_code=403, content={"error": "shutdown is not enabled"})
+
+    def stop_soon():
+        time.sleep(0.3)          # let this response reach the browser first
+        os.kill(os.getpid(), signal.SIGTERM)
+
+    threading.Thread(target=stop_soon, daemon=True).start()
+    return {"status": "stopping"}
+
+
 @app.get("/api/health")
 async def health_check():
     """Reports which server-side credentials are configured, so a deployment can be
@@ -78,6 +100,7 @@ async def health_check():
         "gemini_key_set": bool(os.environ.get("GEMINI_API_KEY")),
         "youtube_cookies_set": cookies_configured(),
         "youtube_proxy_set": bool(get_proxy()),
+        "can_shutdown": shutdown_allowed(),
     }
 
 # Mount static directory if exists

@@ -94,6 +94,11 @@ PY
 # straight out of a local browser profile. Harmless when the browser is absent.
 export YOUTUBE_COOKIES_FROM_BROWSER="${YOUTUBE_COOKIES_FROM_BROWSER:-chrome}"
 
+# Lets the page offer a Quit button. Deliberately scoped to this launcher: the
+# same server code runs on public deployments, where a shutdown route would be
+# an open invitation.
+export GETTEXT_ALLOW_SHUTDOWN=1
+
 {
     echo ""
     echo "=== $(date '+%Y-%m-%d %H:%M:%S') starting on port $PORT ==="
@@ -116,21 +121,8 @@ See $LOG_FILE"
 
 open "http://127.0.0.1:$PORT/"
 
-# --- Stay alive, and give the user a way out ------------------------------
-while kill -0 "$SERVER_PID" 2>/dev/null; do
-    CHOICE=$(osascript 2>/dev/null <<EOF
-tell application "System Events"
-    activate
-    display dialog "$APP_NAME is running.
-
-http://127.0.0.1:$PORT
-
-Quitting stops the server." buttons {"Quit", "Open in browser"} default button "Open in browser" with title "$APP_NAME"
-end tell
-EOF
-) || break
-    case "$CHOICE" in
-        *"Open in browser"*) open "http://127.0.0.1:$PORT/" ;;
-        *) break ;;
-    esac
-done
+# Nothing is shown on screen from here on. An earlier version parked a dialog in
+# front of everything, which is both in the way and a trap: dismissing it killed
+# the server while the browser tab stayed open and started failing to fetch.
+# Quitting now happens from the page itself (POST /api/shutdown).
+wait "$SERVER_PID"
