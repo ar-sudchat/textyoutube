@@ -58,6 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCopyActive = document.getElementById('btn-copy-active');
     const btnDownloadActive = document.getElementById('btn-download-active');
 
+    const authStatus = document.getElementById('auth-status');
+    const authStatusText = document.getElementById('auth-status-text');
+
     // --- Language bootstrap (default English, see i18n.js) ---
     const OUTPUT_LANG_KEY = 'output_lang';
     let outputLangPinned = !!localStorage.getItem(OUTPUT_LANG_KEY);
@@ -81,9 +84,59 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem(OUTPUT_LANG_KEY, outputLanguageSelect.value);
     });
 
+    /**
+     * Whether YouTube requests will be authenticated. Cookies decide whether a
+     * deployed instance works at all, so this is surfaced up front rather than
+     * left to be discovered through a failed extraction.
+     */
+    const auth = { serverCookies: false, known: false };
+
+    async function loadAuthStatus() {
+        try {
+            const resp = await fetch('/api/health');
+            const data = await resp.json();
+            auth.serverCookies = !!data.youtube_cookies_set;
+        } catch (err) {
+            console.error('Health check failed:', err);
+            auth.serverCookies = false;
+        }
+        auth.known = true;
+        renderAuthStatus();
+    }
+
+    function renderAuthStatus() {
+        const hasUserCookies = !!state.cookiesText.trim();
+        let key = 'auth.checking';
+        let tone = '';
+
+        if (auth.known || hasUserCookies) {
+            if (hasUserCookies) {
+                key = 'auth.user';
+                tone = 'ok';
+            } else if (auth.serverCookies) {
+                key = 'auth.server';
+                tone = 'ok';
+            } else {
+                key = 'auth.none';
+                tone = 'warn';
+            }
+        }
+
+        authStatusText.setAttribute('data-i18n', key);
+        authStatusText.textContent = i18n.t(key);
+        authStatus.classList.toggle('is-ok', tone === 'ok');
+        authStatus.classList.toggle('is-warn', tone === 'warn');
+    }
+
+    authStatus.addEventListener('click', () => {
+        settingsPanel.classList.remove('hidden');
+        inputCookies.focus();
+    });
+
     /** Re-render everything that i18n.apply() cannot reach (JS-generated text). */
     function refreshDynamicText() {
         updateCookieStatus();
+        renderAuthStatus();
         if (state.statusKey) {
             statusTitle.textContent = i18n.t(`status.${state.statusKey}.title`);
             statusDetail.textContent = i18n.t(`status.${state.statusKey}.detail`);
@@ -100,6 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     inputGeminiKey.value = state.geminiApiKey;
     inputCookies.value = state.cookiesText;
     updateCookieStatus();
+    renderAuthStatus();
+    loadAuthStatus();
     urlInput.focus();
 
     // --- Event Listeners ---
@@ -151,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('gemini_api_key', state.geminiApiKey);
         localStorage.setItem('yt_cookies_text', state.cookiesText);
         updateCookieStatus();
+        renderAuthStatus();
         settingsPanel.classList.add('hidden');
         showToast(i18n.t('toast.saved'));
     });

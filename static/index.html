@@ -20,7 +20,7 @@
     <!-- Highlight.js for Code Highlighting (light theme) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <link rel="stylesheet" href="/static/style.css?v=6">
+    <link rel="stylesheet" href="/static/style.css?v=7">
 </head>
 <body>
     <div class="background-globes">
@@ -125,18 +125,13 @@
                     <div class="option-box">
                         <label>
                             <i class="fa-solid fa-shield-halved"></i>
-                            <span data-i18n="options.videoType">Video type</span>
+                            <span data-i18n="options.access">YouTube access</span>
                         </label>
-                        <div class="segmented">
-                            <label class="segment" data-i18n-title="options.public.hint" title="Public or unlisted videos">
-                                <input type="radio" name="video-type" value="public" checked>
-                                <span><i class="fa-solid fa-globe"></i><span data-i18n="options.public">Public</span></span>
-                            </label>
-                            <label class="segment" data-i18n-title="options.private.hint" title="Private videos — requires cookies">
-                                <input type="radio" name="video-type" value="private">
-                                <span><i class="fa-solid fa-lock"></i><span data-i18n="options.private">Private</span></span>
-                            </label>
-                        </div>
+                        <button type="button" id="auth-status" class="auth-status" data-i18n-title="auth.open" title="Open settings to add cookies">
+                            <span class="auth-dot"></span>
+                            <span id="auth-status-text" data-i18n="auth.checking">Checking…</span>
+                            <i class="fa-solid fa-chevron-right auth-go"></i>
+                        </button>
                     </div>
 
                     <div class="option-box">
@@ -270,7 +265,7 @@
         </footer>
     </div>
 
-    <script src="/static/i18n.js?v=6"></script>
-    <script src="/static/app.js?v=6"></script>
+    <script src="/static/i18n.js?v=7"></script>
+    <script src="/static/app.js?v=7"></script>
 </body>
 </html>
