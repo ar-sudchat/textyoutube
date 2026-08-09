@@ -230,8 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setBusy(true);
         showLoading('extracting');
 
-        const isPrivate = document.querySelector('input[name="video-type"]:checked').value === 'private';
-
         try {
             // 1. Extract Transcript API
             const extractResp = await fetch('/api/extract', {
@@ -239,7 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     url: url,
-                    cookies_text: isPrivate ? state.cookiesText : null,
+                    // Always send cookies when the user has them, not just for
+                    // private videos: a server whose IP YouTube has flagged needs
+                    // them for public videos too.
+                    cookies_text: state.cookiesText || null,
                     gemini_api_key: state.geminiApiKey || null,
                     // Prefer a subtitle track in the user's language, then fall back.
                     languages: [...new Set([i18n.get(), 'en', 'th'])]

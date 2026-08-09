@@ -3,7 +3,9 @@ import re
 import tempfile
 import json
 import logging
+import http.cookiejar
 from typing import Dict, Any, List, Optional, Tuple
+import requests
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 import yt_dlp
 from google import genai
@@ -11,6 +13,36 @@ from google.genai import types
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# requests advertises itself as "python-requests/x.y" by default, which is a bot
+# signal in its own right. Present as a normal browser instead.
+_BROWSER_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+)
+
+
+def _build_http_client(cookie_file_path: Optional[str]) -> requests.Session:
+    """
+    Build the session youtube-transcript-api should use.
+
+    Version 1.x takes cookies via this session, NOT via a `cookies=` argument to
+    fetch()/list() — passing that keyword raises TypeError and kills the whole
+    strategy, so supplying cookies used to make things strictly worse.
+    """
+    session = requests.Session()
+    session.headers.update({"User-Agent": _BROWSER_UA})
+
+    if cookie_file_path:
+        try:
+            jar = http.cookiejar.MozillaCookieJar(cookie_file_path)
+            jar.load(ignore_discard=True, ignore_expires=True)
+            session.cookies.update(jar)
+            logger.info(f"Loaded {len(jar)} cookies for the transcript API session")
+        except Exception as e:
+            logger.warning(f"Could not load cookies from {cookie_file_path}: {e}")
+
+    return session
 
 def extract_video_id(url_or_id: str) -> Optional[str]:
     """
@@ -196,11 +228,8 @@ class YouTubeExtractor:
         languages: List[str]
     ) -> Dict[str, Any]:
         try:
-            api = YouTubeTranscriptApi()
-            kwargs = {}
-            if cookie_file_path:
-                kwargs['cookies'] = cookie_file_path
-                
+            api = YouTubeTranscriptApi(http_client=_build_http_client(cookie_file_path))
+
             # Attempt to fetch directly with preferred languages. Both failures are
             # kept: swallowing them reports "no subtitle track" for videos that are
             # really being refused, which hides an IP block behind a wrong diagnosis.
@@ -208,12 +237,12 @@ class YouTubeExtractor:
             fetch_err = None
             list_err = None
             try:
-                fetched = api.fetch(video_id, languages=languages, **kwargs)
+                fetched = api.fetch(video_id, languages=languages)
             except Exception as e:
                 fetch_err = e
                 logger.warning(f"Fetch transcript failed for {video_id}: {e}")
                 try:
-                    transcript_list = api.list(video_id, **kwargs)
+                    transcript_list = api.list(video_id)
                     for tr in transcript_list:
                         fetched = tr.fetch()
                         break
@@ -324,7 +353,6 @@ class YouTubeExtractor:
                 json_format = next((f for f in chosen_sub if f.get('ext') == 'json3'), None)
                 if json_format:
                     # Download json3 subtitle directly
-                    import requests
                     resp = requests.get(json_format['url'], timeout=10, verify=False)
                     if resp.status_code == 200:
                         sub_json = resp.json()
