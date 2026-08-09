@@ -58,6 +58,12 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>CFBundleVersion</key>           <string>$VERSION</string>
     <key>LSMinimumSystemVersion</key>    <string>11.0</string>
     <key>NSHighResolutionCapable</key>   <true/>
+    <!-- The executable is a shell script, so it never signals Cocoa that launching
+         finished and the Dock tile bounces forever waiting. Declaring the bundle a
+         background agent removes the tile entirely, which suits it: the real UI is
+         the browser page, and quitting happens from there. -->
+    <key>LSUIElement</key>               <true/>
+    <key>LSBackgroundOnly</key>          <false/>
 </dict>
 </plist>
 PLIST
