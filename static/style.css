@@ -1274,3 +1274,13 @@ body {
         width: 100%;
     }
 }
+
+/* Fallback when the Markdown CDN is unavailable */
+.plain-summary {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: inherit;
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+}

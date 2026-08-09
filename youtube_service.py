@@ -114,6 +114,18 @@ def get_proxy() -> Optional[str]:
     return os.environ.get("YOUTUBE_PROXY") or None
 
 
+def get_cookies_from_browser() -> Optional[tuple]:
+    """
+    yt-dlp can read cookies straight out of a local browser profile, which is how
+    the macOS app handles private videos without anyone exporting a cookies.txt.
+
+    Set YOUTUBE_COOKIES_FROM_BROWSER to chrome / brave / firefox / safari / edge.
+    Only useful where a browser profile exists, so it is off unless configured.
+    """
+    browser = (os.environ.get("YOUTUBE_COOKIES_FROM_BROWSER") or "").strip().lower()
+    return (browser,) if browser else None
+
+
 def resolve_server_cookies() -> Optional[str]:
     """
     Cookie text configured on the server, so the deployment stays "logged in"
@@ -380,6 +392,9 @@ class YouTubeExtractor:
         proxy = get_proxy()
         if proxy:
             ydl_opts['proxy'] = proxy
+        from_browser = get_cookies_from_browser()
+        if from_browser and not cookie_file_path:
+            ydl_opts['cookiesfrombrowser'] = from_browser
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -482,6 +497,9 @@ class YouTubeExtractor:
             proxy = get_proxy()
             if proxy:
                 ydl_opts['proxy'] = proxy
+            from_browser = get_cookies_from_browser()
+            if from_browser and not cookie_file_path:
+                ydl_opts['cookiesfrombrowser'] = from_browser
 
             try:
                 logger.info("Downloading audio for AI transcription...")

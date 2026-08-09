@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            const extractData = await extractResp.json();
+            const extractData = await readJson(extractResp);
             if (!extractResp.ok || !extractData.success) {
                 throw new ApiError(extractData.error_code, extractData.error);
             }
@@ -336,16 +336,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            const summarizeData = await summarizeResp.json();
+            const summarizeData = await readJson(summarizeResp);
             if (!summarizeResp.ok || !summarizeData.success) {
                 throw new ApiError(summarizeData.error_code, summarizeData.error);
             }
 
             state.currentSummary = summarizeData.result;
-            summaryRender.innerHTML = marked.parse(state.currentSummary);
-            if (window.hljs) {
-                summaryRender.querySelectorAll('pre code').forEach((b) => hljs.highlightElement(b));
-            }
+            renderSummary(state.currentSummary);
 
             hideLoading();
             outputContainer.classList.remove('hidden');
@@ -356,10 +353,37 @@ document.addEventListener('DOMContentLoaded', () => {
             if (err instanceof ApiError) {
                 showErrorCode(err.code, err.raw);
             } else {
-                showErrorKey('error.generic');
+                // Never swallow an unexpected failure behind a fixed string: a
+                // dead CDN, an offline server and a bad response all used to look
+                // identical here, which made them impossible to tell apart.
+                console.error('Request failed:', err);
+                showErrorText(`${i18n.t('error.generic')} (${err.message})`);
             }
         } finally {
             setBusy(false);
+        }
+    }
+
+    /** Parse a JSON body, reporting the HTTP status when the body is not JSON. */
+    async function readJson(response) {
+        const text = await response.text();
+        try {
+            return JSON.parse(text);
+        } catch (err) {
+            const snippet = text.trim().slice(0, 120) || '(empty response)';
+            throw new Error(`HTTP ${response.status} — ${snippet}`);
+        }
+    }
+
+    /** Render Markdown, degrading to plain text if the Markdown CDN never loaded. */
+    function renderSummary(markdown) {
+        if (window.marked && typeof marked.parse === 'function') {
+            summaryRender.innerHTML = marked.parse(markdown);
+            if (window.hljs) {
+                summaryRender.querySelectorAll('pre code').forEach((b) => hljs.highlightElement(b));
+            }
+        } else {
+            summaryRender.innerHTML = `<pre class="plain-summary">${escapeHtml(markdown)}</pre>`;
         }
     }
 
@@ -473,6 +497,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function showErrorCode(code, raw) {
         state.lastError = { code: code, raw: raw };
         errorMessage.textContent = i18n.tError(code, raw);
+        errorContainer.classList.remove('hidden');
+    }
+
+    /** Show a message that has no translation key — keep it verbatim on re-render. */
+    function showErrorText(text) {
+        state.lastError = { code: null, raw: text };
+        errorMessage.textContent = text;
         errorContainer.classList.remove('hidden');
     }
 
