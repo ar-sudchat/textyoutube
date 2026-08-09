@@ -1,0 +1,22 @@
+# Keep the build context small — venv alone is ~96MB
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+.git/
+.gitignore
+.github/
+
+# Secrets must never reach the image
+.env
+.env.*
+cookies.txt
+*.cookies.txt
+
+*.log
+.DS_Store
+.idea/
+.vscode/
+Dockerfile
+.dockerignore
